@@ -1,0 +1,50 @@
+version: '3'
+
+networks:
+  vue_laravel_mariadb:
+    driver: bridge
+
+services:
+  front-vue:  # Vue用のコンテナ
+    build: 
+      context: .
+      dockerfile: ./docker/front/Dockerfile
+    container_name: front-vue
+    tty: true
+    volumes:
+      - ./front:/front
+    working_dir: "/front"
+    ports:
+      - 8080:8080
+    networks:
+      - vue_laravel_mariadb
+  backend-laravel:  # Laravel用のコンテナ
+    build: 
+      context: .
+      dockerfile: ./docker/backend/Dockerfile
+    container_name: backend-laravel
+    tty: true
+    volumes:
+      - ./backend:/var/www/html
+    working_dir: "/var/www/html"
+    ports:
+      - 8000:8000
+      - 8081:80
+    networks:
+      - vue_laravel_mariadb
+  docker_mariadb: #mysql用のコンテナ
+   build:
+    context: .
+    dockerfile: ./docker/mysql/Dockerfile
+   container_name: mariadb
+   env_file: ./docker/mysql/mysql.env
+   ports:
+     - '3306:3306'
+   volumes:
+     - ./docker/mysql/conf:/etc/mysql/conf.d/:ro
+     - mariadbdata-laravel:/var/lib/mysql
+   networks:
+     - vue_laravel_mariadb
+
+volumes:
+  mariadbdata-laravel:
